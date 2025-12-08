@@ -1,0 +1,14 @@
+{
+  "name": "wsjtx/automation-proxy",
+  "description": "PHP app to automate WSJT-X PTT, messages, and QSO logging.",
+  "type": "project",
+  "require": {
+    "php": "^8.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  }
+}
+
