@@ -68,8 +68,36 @@
     }
   };
 
+  /** @type {HTMLElement} */
+  const automationStatus = document.getElementById('automationStatus');
+  /** @type {HTMLElement} */
+  const recentDecodes = document.getElementById('recentDecodes');
+
+  /**
+   * Refresh automation status.
+   *
+   * @returns {Promise<void>}
+   */
+  const refreshAutomation = async () => {
+    try {
+      const data = await fetchJson('api/automation/status');
+      automationStatus.textContent = `Status: ${data.enabled ? 'Enabled' : 'Disabled'}`;
+      if (data.recentDecodes && data.recentDecodes.length > 0) {
+        recentDecodes.innerHTML = '<h4>Recent Decodes:</h4>' + 
+          data.recentDecodes.map(d => 
+            `<div class="decode-row"><strong>${d.message || ''}</strong> (${d.mode || ''}) SNR: ${d.snr || 0}</div>`
+          ).join('');
+      } else {
+        recentDecodes.innerHTML = '<p>No recent decodes.</p>';
+      }
+    } catch (e) {
+      automationStatus.textContent = `Error: ${e.message}`;
+    }
+  };
+
   document.getElementById('refreshStatus').addEventListener('click', refreshStatus);
   document.getElementById('refreshLogs').addEventListener('click', refreshLogs);
+  document.getElementById('refreshAutomation').addEventListener('click', refreshAutomation);
 
   document.getElementById('pttOn').addEventListener('click', () =>
     fetchJson('api/ptt', {
@@ -89,6 +117,32 @@
       .catch((err) => alert(err.message)),
   );
 
+  document.getElementById('automationOn').addEventListener('click', () =>
+    fetchJson('api/automation/toggle', {
+      method: 'POST',
+      body: new URLSearchParams({ enable: 'true' }),
+    })
+      .then(() => {
+        refreshAutomation();
+        refreshStatus();
+        alert('Automation enabled');
+      })
+      .catch((err) => alert(err.message)),
+  );
+
+  document.getElementById('automationOff').addEventListener('click', () =>
+    fetchJson('api/automation/toggle', {
+      method: 'POST',
+      body: new URLSearchParams({ enable: 'false' }),
+    })
+      .then(() => {
+        refreshAutomation();
+        refreshStatus();
+        alert('Automation disabled');
+      })
+      .catch((err) => alert(err.message)),
+  );
+
   transmitForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = new FormData(transmitForm);
@@ -102,6 +156,18 @@
     }
   });
 
+  // polling for automation status
+  setInterval(async () => {
+    try {
+      const data = await fetchJson('api/automation/status');
+      if (data.enabled) {
+        refreshAutomation();
+      }
+    } catch (e) {
+    }
+  }, 5000);
+
   refreshStatus();
   refreshLogs();
+  refreshAutomation();
 })();

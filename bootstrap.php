@@ -14,4 +14,3 @@ if (!file_exists($autoload)) {
 require $autoload;
 
 AppConfig::bootstrap(__DIR__);
-

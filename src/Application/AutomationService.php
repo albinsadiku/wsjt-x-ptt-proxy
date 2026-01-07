@@ -7,14 +7,14 @@ namespace App\Application;
 use App\Domain\PTT\PttController;
 use App\Domain\Qso\QsoLogEntry;
 use App\Domain\Qso\QsoLogRepository;
-use App\Infrastructure\WsjtX\WsjtXClient;
+use App\Infrastructure\WsjtX\Client;
 
 final class AutomationService
 {
     /**
-     * @var WsjtXClient
+     * @var Client
      */
-    private WsjtXClient $client;
+    private Client $client;
     /**
      * @var PttController
      */
@@ -28,7 +28,7 @@ final class AutomationService
      * @return void
      */
     public function __construct(
-        WsjtXClient $client,
+        Client $client,
         PttController $pttController,
         QsoLogRepository $logs
     ) {

@@ -23,6 +23,17 @@ declare(strict_types=1);
     </section>
 
     <section>
+        <h2>Automation</h2>
+        <div class="automation-controls">
+            <button id="automationOn">Enable Automation</button>
+            <button id="automationOff">Disable Automation</button>
+            <div id="automationStatus">Status: Unknown</div>
+            <button id="refreshAutomation">Refresh Automation Status</button>
+            <div id="recentDecodes"></div>
+        </div>
+    </section>
+
+    <section>
         <h2>PTT</h2>
         <div class="ptt-controls">
             <button id="pttOn">Engage PTT</button>

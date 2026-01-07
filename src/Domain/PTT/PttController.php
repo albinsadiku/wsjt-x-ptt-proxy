@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Domain\PTT;
 
-use App\Infrastructure\WsjtX\WsjtXClient;
+use App\Infrastructure\WsjtX\Client;
 
 final class PttController
 {
     /**
-     * @var WsjtXClient
+     * @var Client
      */
-    private WsjtXClient $client;
+    private Client $client;
     /**
      * @var bool
      */
@@ -20,7 +20,7 @@ final class PttController
     /**
      * @return void
      */
-    public function __construct(WsjtXClient $client)
+    public function __construct(Client $client)
     {
         $this->client = $client;
     }

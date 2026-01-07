@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace App\Http\Controller;
 
 use App\Application\AutomationService;
+use App\Domain\Automation\AutomationController;
 use App\Domain\PTT\PttController;
 use App\Domain\Qso\QsoLogEntry;
 use App\Domain\Qso\QsoLogRepository;
 use App\Http\JsonResponse;
-use App\Infrastructure\WsjtX\WsjtXClient;
+use App\Infrastructure\WsjtX\Client;
 use InvalidArgumentException;
 
 final class ApiController
 {
     /**
-     * @var WsjtXClient
+     * @var Client
      */
-    private WsjtXClient $client;
+    private Client $client;
     /**
      * @var PttController
      */
@@ -30,20 +31,26 @@ final class ApiController
      * @var AutomationService
      */
     private AutomationService $automation;
+    /**
+     * @var AutomationController
+     */
+    private AutomationController $automationController;
 
     /**
      * @return void
      */
     public function __construct(
-        WsjtXClient $client,
+        Client $client,
         PttController $ptt,
         QsoLogRepository $logs,
-        AutomationService $automation
+        AutomationService $automation,
+        AutomationController $automationController
     ) {
         $this->client = $client;
         $this->ptt = $ptt;
         $this->logs = $logs;
         $this->automation = $automation;
+        $this->automationController = $automationController;
     }
 
     /**
@@ -51,11 +58,14 @@ final class ApiController
      */
     public function status(): void
     {
+        $this->automationController->process();
+
         JsonResponse::send([
             'status' => 'ok',
             'rig' => $this->client->requestStatus(),
             'pttEngaged' => $this->ptt->isEngaged(),
             'logCount' => count($this->logs->all()),
+            'automationEnabled' => $this->automationController->isEnabled(),
         ]);
     }
 
@@ -116,6 +126,38 @@ final class ApiController
                 static fn (QsoLogEntry $entry): array => $entry->toArray(),
                 $this->logs->all()
             ),
+        ]);
+    }
+
+    /**
+     * Enable or disable automation.
+     *
+     * @return void
+     */
+    public function toggleAutomation(): void
+    {
+        $enable = filter_var($_POST['enable'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $enable ? $this->automationController->enable() : $this->automationController->disable();
+
+        JsonResponse::send([
+            'automationEnabled' => $this->automationController->isEnabled(),
+        ]);
+    }
+
+    /**
+     * Get automation status and recent decodes.
+     *
+     * @return void
+     */
+    public function automationStatus(): void
+    {
+        // process any pending messages
+        $processed = $this->automationController->process();
+
+        JsonResponse::send([
+            'enabled' => $this->automationController->isEnabled(),
+            'recentDecodes' => array_slice($this->automationController->getRecentDecodes(), -10),
+            'lastProcessed' => $processed,
         ]);
     }
 }
